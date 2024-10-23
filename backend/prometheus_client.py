@@ -1,11 +1,11 @@
-# prometheus_client.py
+#Query the Prometheus server to fetch the current GPU VRAM usage metric
 import requests
 
 PROMETHEUS_URL = "http://localhost:9090/api/v1/query"
 
 def get_gpu_memory_usage():
-    query = 'nvidia_smi_memory_used_bytes'
-    response = requests.get(f"{PROMETHEUS_URL}?query={query}")
+    metric = 'nvidia_smi_memory_used_bytes'
+    response = requests.get(f"{PROMETHEUS_URL}?query={metric}")
     result = response.json()
 
     if result['status'] == 'success':
