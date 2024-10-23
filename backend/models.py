@@ -27,8 +27,9 @@ class UserAction(Base):
     response_time = Column(Float)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
-# Database connection setup
+# DB Engine
 engine = create_engine(DATABASE_URL)
+#Session Factory
 SessionLocal = sessionmaker(bind=engine)
 
 def init_db():
