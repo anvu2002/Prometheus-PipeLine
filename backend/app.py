@@ -1,27 +1,25 @@
 from fastapi import FastAPI
-from prometheus_client import get_gpu_memory_usage
-from slack_notifier import send_slack_alert
-from models import GPUUsage, SessionLocal
-from datetime import datetime
+from starlette.middleware.cors import CORSMiddleware
+import os
+import uvicorn
+
+from router import router
+
+os.environ["no_proxy"]="*"
+os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
 app = FastAPI()
+origins = [
+    "*",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], 
+    allow_headers=["*"], 
+)
+app.include_router(router)
 
-@app.get("/gpu/metrics")
-def fetch_gpu_metrics():
-    metrics = get_gpu_memory_usage()
-    db = SessionLocal()
-    for metric in metrics:
-        gpu_id = metric['metric']['gpu']
-        memory_used = float(metric['value'][1])
-
-        # Store in database
-        gpu_usage = GPUUsage(gpu_id=gpu_id, memory_used=memory_used)
-        db.add(gpu_usage)
-
-        # Send alert if memory usage exceeds 80%
-        if memory_used > 8000:  # Example threshold
-            send_slack_alert(gpu_id, memory_used)
-
-    db.commit()
-    db.close()
-    return {"status": "success", "metrics": metrics}
+if __name__ == "__main__":
+    uvicorn.run("main:app", port=4567, log_level="info")
