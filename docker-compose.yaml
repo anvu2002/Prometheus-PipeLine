@@ -15,6 +15,7 @@ services:
     command: "--config.file=/etc/prometheus/prometheus.yaml"
     volumes:
       - ./config/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      - ./config/gpu_mem_rules.yaml:/etc/prometheus/gpu_mem_rules.yaml:ro
       - prometheus-data:/prometheus
     restart: unless-stopped
 

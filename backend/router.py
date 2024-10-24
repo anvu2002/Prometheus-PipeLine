@@ -56,8 +56,8 @@ async def fetch_gpu_metrics(request: Request):
 
         logger.debug(f"gpu_metrics = {gpu_metrics}")
 
-        # Alerting!
-        if gpu_metrics[target_gpu_id] > 80:
+        # Alerting! Threshold
+        if gpu_metrics[target_gpu_id] > 60:
             send_slack_alert(GPU_MAP[target_gpu_id], gpu_metrics)
 
 

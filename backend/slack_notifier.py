@@ -1,6 +1,8 @@
 # slack_notifier.py
 import requests
 from loguru import logger
+from datetime import datetime
+
 
 from config.config import SLACK_WEBHOOK_URL, GPU_MAP
 
@@ -19,7 +21,7 @@ def send_slack_alert(target_gpu_name, gpus_metrics: dict):
                     "type": "header",
                     "text": {
                         "type": "plain_text",
-                        "text": f"[ALERT] {target_gpu_name} is overloaded",
+                        "text": f"[ALERT] {target_gpu_name} Memory Threshold Reached",
                         "emoji": True
                     }
                 },
@@ -45,7 +47,7 @@ def send_slack_alert(target_gpu_name, gpus_metrics: dict):
                         },
                         {
                             "type": "mrkdwn",
-                            "text": "*When:*\n[datetime]"
+                            "text": f"*When:*\n{datetime.now()}"
                         }
                     ]
                 },

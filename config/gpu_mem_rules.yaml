@@ -1,0 +1,12 @@
+groups:
+  - name: gpu_memory_alerts
+    rules:
+      - alert: GPUMemoryUsageHigh
+        # Condition for alerting
+        expr: (nvidia_smi_memory_used_bytes / nvidia_smi_memory_total_bytes) * 100 > 60
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "GPU Memory usage is high on instance {{ $labels.instance }}"
+          description: "GPU {{ $labels.uuid }} on instance {{ $labels.instance }} is using more than 60% of its memory ({{ $value }}%)."
