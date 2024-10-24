@@ -1,6 +1,6 @@
 global:
   scrape_interval:     10s
-  evaluation_interval: 10s
+  evaluation_interval: 2s
 
 rule_files:
   - "gpu_mem_rules.yaml"
@@ -13,10 +13,6 @@ alerting:
       - targets:
         - 10.147.19.160:9093
 
-# Attach these labels to any time series or alerts when communicating with
-# external systems (federation, remote storage, Alertmanager).
-# external_labels:
-#  monitor: 'codelab-monitor'
 
 scrape_configs:
   # - job_name: 'prometheus'
