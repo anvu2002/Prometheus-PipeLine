@@ -6,7 +6,7 @@ rule_files:
   - "gpu_mem_rules.yaml"
 
 
-# Alerting specifies settings related to the Alertmanager
+#Alertmanager Server
 alerting:
   alertmanagers:
     - static_configs:

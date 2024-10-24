@@ -2,7 +2,7 @@ from fastapi import Request, APIRouter, HTTPException
 from loguru import logger
 import json
 from prometheus_client import get_gpu_memory_usage
-from slack_notifier import send_slack_alert
+from slack_notifier import send_slack_alert, send_slack_resolved
 from models import GPUUsage, UserAction, SessionLocal
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -82,9 +82,10 @@ async def handle_alertmanager_webhook(request: Request):
         gpu_metrics = dict()
         data = await request.json()
         alerts = data.get('alerts', [])
-        metrics : list[list] = get_gpu_memory_usage()
+        metrics: list[list] = get_gpu_memory_usage()
         if not metrics:
-            raise HTTPException(status_code=404, detail=f"No GPU Metrics was found!")
+            raise HTTPException(status_code=404, detail=f"No GPU Metrics were found!")
+        
         # Initialize database session
         db: Session = SessionLocal()
         
@@ -96,33 +97,32 @@ async def handle_alertmanager_webhook(request: Request):
                 logger.error(f"Invalid memory value for GPU {gpu_uuid}: {metric[0]['value'][1]}")
                 raise HTTPException(status_code=500, detail="Invalid memory value from Prometheus")
             
-            gpu_metrics.update({gpu_uuid:memory_used})
+            gpu_metrics.update({gpu_uuid: memory_used})
             # Store GPU memory usage in the database
             gpu_usage = GPUUsage(gpu_id=gpu_uuid, memory_used=memory_used)
             db.add(gpu_usage)
 
         db.commit()
 
-        logger.debug(f"[slack_endpoint] gpu_metrics = {gpu_metrics}")
-
+        logger.debug(f"[slack_alert_endpoint] gpu_metrics = {gpu_metrics}")
         logger.debug(f"alerts = {alerts}")
+        
         for alert in alerts:
             labels = alert.get('labels', {})
             target_gpu_uuid = labels.get('uuid', 'Unknown GPU')
             details = alert.get('annotations', {}).get('description', 'No detail provided')
+            status = alert.get('status', 'firing')  # Alert Resolved?
 
-
-            # Custom Slack alert function
-            # logger.debug(f"gpu_metrics = {gpu_metrics}")
-
-            send_slack_alert(GPU_MAP[target_gpu_uuid], details, gpu_metrics)
+            if status == 'firing':
+                send_slack_alert(GPU_MAP[target_gpu_uuid], details, gpu_metrics)
+            elif status == 'resolved':
+                send_slack_resolved(GPU_MAP[target_gpu_uuid], details, gpu_metrics)
 
     except Exception as e:
         logger.error(f"Error processing AlertManager webhook: {e}")
         return {"status": "error", "message": str(e)}
 
-    return {"service":"slack_webhook","status": "success"}
-
+    return {"service": "slack_webhook", "status": "success"}
 
 @router.post("/fetch/user_metrics")
 async def fetch_user_metrics(request: Request):
